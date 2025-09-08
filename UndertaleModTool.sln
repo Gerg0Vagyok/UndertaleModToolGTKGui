@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UndertaleModLibTests", "Und
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Underanalyzer", "Underanalyzer\Underanalyzer\Underanalyzer.csproj", "{A171D18F-274E-427A-AFB3-D7A161F5B9CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UndertaleModToolGtk", "UndertaleModToolGtk\UndertaleModToolGtk.csproj", "{4748E932-40F8-4688-9D92-01C4F4F17113}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,14 @@ Global
 		{A171D18F-274E-427A-AFB3-D7A161F5B9CF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A171D18F-274E-427A-AFB3-D7A161F5B9CF}.Release|x64.ActiveCfg = Release|Any CPU
 		{A171D18F-274E-427A-AFB3-D7A161F5B9CF}.Release|x64.Build.0 = Release|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Debug|x64.Build.0 = Debug|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Release|x64.ActiveCfg = Release|Any CPU
+		{4748E932-40F8-4688-9D92-01C4F4F17113}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
