@@ -20,6 +20,7 @@ namespace UndertaleModToolGtk
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
 
+			CSS = new CssProvider();
 			CSS.LoadFromData("* { font-size: 18pt; }");
 			StyleContext.AddProviderForScreen(Gdk.Screen.Default, CSS, 800);
 
