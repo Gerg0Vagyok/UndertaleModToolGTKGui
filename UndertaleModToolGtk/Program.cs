@@ -1,4 +1,4 @@
-using System;
+//using System;
 using Gtk;
 
 namespace UndertaleModToolGtk
@@ -10,37 +10,59 @@ namespace UndertaleModToolGtk
 		private int Height = 650;
 		private int MinHeight = 100;
 
-		private HPaned Seperator;
-		private Box MainLeft;
-		private Box MainRight;
+		private Paned Seperator = new Paned(Orientation.Horizontal);
+		private Box MainLeft = new Box(Orientation.Vertical, 0);
+		private Box MainRight = new Box(Orientation.Vertical, 0);
+		private Box MainBox = new Box(Orientation.Vertical, 0);
 
-		private CssProvider CSS;
+		private CssProvider CSS = new CssProvider();
 
-		private Program() : base("Unofficial Undertale Mod Tool") {
+		private MenuBar TitleBar = new MenuBar();
+
+		private Program() : base("Unofficial UndertaleModTool") {
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
 
-			CSS = new CssProvider();
-			CSS.LoadFromData("* { font-size: 18pt; }");
+			CSS.LoadFromData("* { font-size: 10pt; }");
 			StyleContext.AddProviderForScreen(Gdk.Screen.Default, CSS, 800);
 
-			Seperator = new HPaned();
+			Menu fileMenu = new Menu();
+			MenuItem file = new MenuItem("File");
+			file.Submenu = fileMenu;
 
-			MainLeft = new Box(Orientation.Vertical, 0);
+			MenuItem open = new MenuItem("Open");
+			fileMenu.Append(open);
+
+			MenuItem settings = new MenuItem("Settings");
+			fileMenu.Append(settings);
+
+			TitleBar.Append(file);
+
+			MainBox.PackStart(TitleBar, false, false, 0);
+
 			MainLeft.SetSizeRequest(MinWidth / 2, Height);
-			MainRight = new Box(Orientation.Vertical, 0);
 			MainRight.SetSizeRequest(MinWidth / 2, Height);
 
 			Label label = new Label("Hello, World!");
 			MainRight.Add(label);
 
-			Expander TestExpander = new Expander("stuff");
+			Expander TestExpander = new Expander("Sprites");
 			TestExpander.Halign = Align.Start;
-			VBox content = new VBox();
-content.PackStart(new Label("Hidden content"), false, true, 0);
-TestExpander.Add(content);
+			Box content = new Box(Orientation.Vertical, 0);
+			content.PackStart(new Label("Hidden content"), false, true, 0);
+			TestExpander.Add(content);
 
-			MainLeft.PackStart(TestExpander, false, false, 0);
+			Expander TestExpander2 = new Expander("Sprites");
+			TestExpander2.Halign = Align.Start;
+			Box content2 = new Box(Orientation.Vertical, 0);
+			content2.PackStart(new Label("Hidden content"), false, true, 0);
+			TestExpander2.Add(content);
+
+			Frame FrameExpander = new Frame(); 
+			FrameExpander.Add(TestExpander);
+			FrameExpander.Add(TestExpander2);
+
+			MainLeft.PackStart(FrameExpander, true, true, 0);
 
 			Seperator.Pack1(MainLeft, true, false);
 			Seperator.Pack2(MainRight, true, false);
@@ -49,7 +71,10 @@ TestExpander.Add(content);
 
 			DeleteEvent += Window_DeleteEvent;
 
-			Add(Seperator);
+			MainBox.PackEnd(Seperator, false, false, 0);
+
+			Add(MainBox);
+
 			ShowAll();
 		}
 
