@@ -15,6 +15,8 @@ namespace UndertaleModToolGtk
 		private Box MainRight = new Box(Orientation.Vertical, 0);
 		private Box MainBox = new Box(Orientation.Vertical, 0);
 
+		private Localization Localizer;
+
 		private Expander SpriteCategory = new Expander("Sprites");
 
 		public string Language = "Default";
@@ -24,6 +26,7 @@ namespace UndertaleModToolGtk
 		private MenuBar TitleBar = new MenuBar();
 
 		private Program() : base("Unofficial UndertaleModTool") {
+			Localizer = new Localization("TestLang");
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
 
@@ -55,24 +58,24 @@ namespace UndertaleModToolGtk
 			TestBuddon.Clicked += btn_clicked;
 			MainRight.Add(TestBuddon);
 
-			Expander TestExpander = new Expander("Sprites");
-			TestExpander.Halign = Align.Start;
-			Box content = new Box(Orientation.Vertical, 0);
-			content.MarginStart = 15;
-			content.PackStart(new Label("Hidden content"), false, true, 0);
-			TestExpander.Add(content);
+			Expander SpritesCategoryExpander = new Expander("CAT_SPRITES");
+			SpritesCategoryExpander.Halign = Align.Start;
+			Box SpritesCategoryContent = new Box(Orientation.Vertical, 0);
+			SpritesCategoryContent.MarginStart = 15;
+			SpritesCategoryContent.PackStart(new Label("Hidden content"), false, true, 0);
+			SpritesCategoryExpander.Add(SpritesCategoryContent);
 
-			Expander TestExpander2 = new Expander("Sprites2");
-			TestExpander2.Halign = Align.Start;
-			Box content2 = new Box(Orientation.Vertical, 0);
-			content2.MarginStart = 15;
-			content2.PackStart(new Label("Hidden content2"), false, true, 0);
-			TestExpander2.Add(content2);
+			Expander SoundsCategoryExpander = new Expander("CAT_SOUNDS");
+			SoundsCategoryExpander.Halign = Align.Start;
+			Box SoundsCategoryContent = new Box(Orientation.Vertical, 0);
+			SoundsCategoryContent.MarginStart = 15;
+			SoundsCategoryContent.PackStart(new Label("Hidden content2"), false, true, 0);
+			SoundsCategoryExpander.Add(SoundsCategoryContent);
 
 			Frame LeftFrame = new Frame(); 
 			Box LeftFrameBox = new Box(Orientation.Vertical, 0);
-			LeftFrameBox.PackStart(TestExpander, false, false, 0);
-			LeftFrameBox.PackStart(TestExpander2, false, false, 0);
+			LeftFrameBox.PackStart(SoundsCategoryExpander, false, false, 0);
+			LeftFrameBox.PackStart(SpritesCategoryExpander, false, false, 0);
 			LeftFrameBox.Margin = 5;
 			LeftFrame.Add(LeftFrameBox);
 
@@ -92,6 +95,10 @@ namespace UndertaleModToolGtk
 
 			Add(MainBox);
 
+			Localizer.Add(SpritesCategoryExpander);
+			Localizer.Add(SoundsCategoryExpander);
+			Localizer.Update();
+
 			ShowAll();
 		}
 
@@ -104,7 +111,12 @@ namespace UndertaleModToolGtk
 		}
 
 		private void btn_clicked(object sender, EventArgs e) {
-			Console.WriteLine("c# sucks");
+			if (Localizer.Language == "English") {
+				Localizer.Language = "TestLang";
+			} else {
+				Localizer.Language = "English";
+			}
+			Localizer.Update();
 		}
 
 
@@ -112,14 +124,6 @@ namespace UndertaleModToolGtk
 			Application.Init();
 			var Win = new Program();
 			Application.Run();
-			Localization thing = new Localization();
-			thing.Add(new Label("asdasd"), "asd3");
-			thing.Add(new Frame("dsadsa"), "asd2");
-			thing.Add(new Button("asdasd"), "asd");
-			thing.Add(new Entry("asdasd"), "asd");
-			thing.Add(new MenuItem("asdasd"), "asd");
-			thing.Add(new Expander("asdasd"), "asd");
-			thing.Update();
 		}
 	}
 }

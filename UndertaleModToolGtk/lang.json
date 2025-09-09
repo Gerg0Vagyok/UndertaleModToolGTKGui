@@ -1,8 +1,10 @@
 {
 	"English": {
-		"CAT_SPRITE": "Sprites"
+		"CAT_SPRITES": "Sprites",
+		"CAT_SOUNDS": "Sounds"
 	},
 	"TestLang": {
-		"CAT_SPRITE": "TestLang_Sprites"
+		"CAT_SPRITES": "TestLang_Sprites",
+		"CAT_SOUNDS": "TestLang_Sounds"
 	}
 }

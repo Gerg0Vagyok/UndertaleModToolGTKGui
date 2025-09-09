@@ -14,8 +14,18 @@ class Localization {
 		LocalizationData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(File.ReadAllText(LocalizationFileName));
 	}
 
-	public void Add(Widget widget, String text) {
-		LocalizedWidgets.Add((widget, text));
+	public void Add(Widget widget) {
+		if (widget.GetType().GetProperty("Text") != null) {
+			var prop = widget.GetType().GetProperty("Text");
+			if (prop != null && prop.CanRead) {
+				LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
+			}
+		} else if (widget.GetType().GetProperty("Label") != null) {
+			var prop = widget.GetType().GetProperty("Label");
+			if (prop != null && prop.CanRead) {
+				LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
+			}
+		}
 	}
 
 	public void Update() {
@@ -24,10 +34,15 @@ class Localization {
 			foreach ((Widget widget, String text) WidgetEl in LocalizedWidgets) {
 				if (LangData.ContainsKey(WidgetEl.text)) {
 					if (WidgetEl.widget.GetType().GetProperty("Text") != null) {
-						WidgetEl.widget.SetProperty("Text", new GLib.Value(LocalizationData[Language][WidgetEl.text]));
-						Console.WriteLine($"Text - {WidgetEl.widget.GetType()}");
+						var prop = WidgetEl.widget.GetType().GetProperty("text");
+						if (prop != null && prop.CanWrite) {
+							prop.SetValue(WidgetEl.widget, LangData[WidgetEl.text]);
+						}
 					} else if (WidgetEl.widget.GetType().GetProperty("Label") != null) {
-						Console.WriteLine($"Label - {WidgetEl.widget.GetType()}");
+						var prop = WidgetEl.widget.GetType().GetProperty("Label");
+						if (prop != null && prop.CanWrite) {
+							prop.SetValue(WidgetEl.widget, LangData[WidgetEl.text]);
+						}
 					} else {
 						Console.WriteLine($"For type '{WidgetEl.widget.GetType()}' output text field not found!");
 					}
