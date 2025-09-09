@@ -1,4 +1,4 @@
-//using System;
+using System;
 using Gtk;
 
 namespace UndertaleModToolGtk
@@ -14,6 +14,10 @@ namespace UndertaleModToolGtk
 		private Box MainLeft = new Box(Orientation.Vertical, 0);
 		private Box MainRight = new Box(Orientation.Vertical, 0);
 		private Box MainBox = new Box(Orientation.Vertical, 0);
+
+		private Expander SpriteCategory = new Expander("Sprites");
+
+		public string Language = "Default";
 
 		private CssProvider CSS = new CssProvider();
 
@@ -44,25 +48,35 @@ namespace UndertaleModToolGtk
 			MainRight.SetSizeRequest(MinWidth / 2, Height);
 
 			Label label = new Label("Hello, World!");
-			MainRight.Add(label);
+
+			Button TestBuddon;
+			TestBuddon = new Button("asd");
+
+			TestBuddon.Clicked += btn_clicked;
+			MainRight.Add(TestBuddon);
 
 			Expander TestExpander = new Expander("Sprites");
 			TestExpander.Halign = Align.Start;
 			Box content = new Box(Orientation.Vertical, 0);
+			content.MarginStart = 15;
 			content.PackStart(new Label("Hidden content"), false, true, 0);
 			TestExpander.Add(content);
 
-			Expander TestExpander2 = new Expander("Sprites");
+			Expander TestExpander2 = new Expander("Sprites2");
 			TestExpander2.Halign = Align.Start;
 			Box content2 = new Box(Orientation.Vertical, 0);
-			content2.PackStart(new Label("Hidden content"), false, true, 0);
-			TestExpander2.Add(content);
+			content2.MarginStart = 15;
+			content2.PackStart(new Label("Hidden content2"), false, true, 0);
+			TestExpander2.Add(content2);
 
-			Frame FrameExpander = new Frame(); 
-			FrameExpander.Add(TestExpander);
-			FrameExpander.Add(TestExpander2);
+			Frame LeftFrame = new Frame(); 
+			Box LeftFrameBox = new Box(Orientation.Vertical, 0);
+			LeftFrameBox.PackStart(TestExpander, false, false, 0);
+			LeftFrameBox.PackStart(TestExpander2, false, false, 0);
+			LeftFrameBox.Margin = 5;
+			LeftFrame.Add(LeftFrameBox);
 
-			MainLeft.PackStart(FrameExpander, true, true, 0);
+			MainLeft.PackStart(LeftFrame, true, true, 0);
 
 			Seperator.Pack1(MainLeft, true, false);
 			Seperator.Pack2(MainRight, true, false);
@@ -71,6 +85,9 @@ namespace UndertaleModToolGtk
 
 			DeleteEvent += Window_DeleteEvent;
 
+			MainLeft.Margin = 5;
+			MainRight.Margin = 5;
+
 			MainBox.PackEnd(Seperator, false, false, 0);
 
 			Add(MainBox);
@@ -78,15 +95,31 @@ namespace UndertaleModToolGtk
 			ShowAll();
 		}
 
+		private void SpriteItemCliced(string ItemName) {
+			Console.WriteLine(ItemName);
+		}
+
 		private void Window_DeleteEvent(object sender, DeleteEventArgs a) {
 			Application.Quit();
 		}
 
-		public static void Main(string[] args)
-		{
+		private void btn_clicked(object sender, EventArgs e) {
+			Console.WriteLine("c# sucks");
+		}
+
+
+		public static void Main(string[] args) {
 			Application.Init();
 			var Win = new Program();
 			Application.Run();
+			Localization thing = new Localization();
+			thing.Add(new Label("asdasd"), "asd3");
+			thing.Add(new Frame("dsadsa"), "asd2");
+			thing.Add(new Button("asdasd"), "asd");
+			thing.Add(new Entry("asdasd"), "asd");
+			thing.Add(new MenuItem("asdasd"), "asd");
+			thing.Add(new Expander("asdasd"), "asd");
+			thing.Update();
 		}
 	}
 }

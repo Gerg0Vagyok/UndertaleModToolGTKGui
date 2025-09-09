@@ -6,13 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="**\*.glade" />
-    <EmbeddedResource Include="**\*.glade">
-      <LogicalName>%(Filename)%(Extension)</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Update="lang.json" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="GtkSharp" Version="3.24.24.*" />
   </ItemGroup>
 
