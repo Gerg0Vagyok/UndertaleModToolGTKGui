@@ -1,7 +1,8 @@
-[
-	{
-		"ID": "CAT_SPRITE",
-		"English": "Sprites",
-		"TestLang": "TestLang_Sprites"
+{
+	"English": {
+		"CAT_SPRITE": "Sprites"
+	},
+	"TestLang": {
+		"CAT_SPRITE": "TestLang_Sprites"
 	}
-]
+}

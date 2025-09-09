@@ -333,3 +333,6 @@ Test/Test - Backup.csproj
 UndertaleModLib/UndertaleModLib - Backup.csproj
 UndertaleModTests/UndertaleModTests - Backup.csproj
 UndertaleModLib/gitversion.txt
+
+# For my convenience i made a symlink
+lang.json
