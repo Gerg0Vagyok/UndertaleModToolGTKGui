@@ -5,13 +5,22 @@ using System.Text.Json;
 using Gtk;
 
 class Localization {
-	public String Language;
+	private String Language;
 	public List<(Widget widget, String text)> LocalizedWidgets = new List<(Widget widget, String text)>();
 	private Dictionary<String, Dictionary<String, String>> LocalizationData;
 
 	public Localization(String Lang = "English", String LocalizationFileName = "lang.json") {
 		Language = Lang;
 		LocalizationData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(File.ReadAllText(LocalizationFileName));
+	}
+
+	public String GetLanguage() {
+		return Language;
+	}
+
+	public void SetLanguage(String Lang) {
+		Language = Lang;
+		Update();
 	}
 
 	public void Add(Widget widget) {
@@ -26,6 +35,7 @@ class Localization {
 				LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
 			}
 		}
+		Update();
 	}
 
 	public void Update() {

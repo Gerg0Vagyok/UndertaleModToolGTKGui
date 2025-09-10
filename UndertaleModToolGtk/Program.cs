@@ -26,11 +26,18 @@ namespace UndertaleModToolGtk
 		private MenuBar TitleBar = new MenuBar();
 
 		private Program() : base("Unofficial UndertaleModTool") {
-			Localizer = new Localization("TestLang");
+			Localizer = new Localization();
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
-
-			CSS.LoadFromData("* { font-size: 10pt; }");
+			CSS.LoadFromData(String.Join(
+				Environment.NewLine,
+				"* {",
+				"	font-size: 10pt;", 
+				"} ", 
+				".listbox, row:not(:selected):not(:hover):not(:focus):not(:active) {", 
+				"	background-color: transparent;", 
+				"} "
+			));
 			StyleContext.AddProviderForScreen(Gdk.Screen.Default, CSS, 800);
 
 			Menu fileMenu = new Menu();
@@ -60,16 +67,28 @@ namespace UndertaleModToolGtk
 
 			Expander SpritesCategoryExpander = new Expander("CAT_SPRITES");
 			SpritesCategoryExpander.Halign = Align.Start;
-			Box SpritesCategoryContent = new Box(Orientation.Vertical, 0);
+			ListBox SpritesCategoryContent = new ListBox();
 			SpritesCategoryContent.MarginStart = 15;
-			SpritesCategoryContent.PackStart(new Label("Hidden content"), false, true, 0);
+			SpritesCategoryContent.StyleContext.AddClass("listbox");
+			SpritesCategoryContent.Add(new Label("asdasd"));
+			SpritesCategoryContent.Add(new Label("asdasd"));
+			SpritesCategoryContent.Add(new Label("asdasd"));
 			SpritesCategoryExpander.Add(SpritesCategoryContent);
+
+			SpritesCategoryContent.RowSelected += (o, args) => {
+				var row = args.Row;
+				Console.WriteLine($"Clicked on: {row}");
+				// Add logic to make that it check doubleclicks and is shared across multiple categories so use a outisde, and make it into a proper function
+			};
 
 			Expander SoundsCategoryExpander = new Expander("CAT_SOUNDS");
 			SoundsCategoryExpander.Halign = Align.Start;
-			Box SoundsCategoryContent = new Box(Orientation.Vertical, 0);
+			ListBox SoundsCategoryContent = new ListBox();
 			SoundsCategoryContent.MarginStart = 15;
-			SoundsCategoryContent.PackStart(new Label("Hidden content2"), false, true, 0);
+			SoundsCategoryContent.StyleContext.AddClass("listbox");
+			SoundsCategoryContent.Add(new Label("asdasd"));
+			SoundsCategoryContent.Add(new Label("asdasd"));
+			SoundsCategoryContent.Add(new Label("asdasd"));
 			SoundsCategoryExpander.Add(SoundsCategoryContent);
 
 			Frame LeftFrame = new Frame(); 
@@ -97,9 +116,14 @@ namespace UndertaleModToolGtk
 
 			Localizer.Add(SpritesCategoryExpander);
 			Localizer.Add(SoundsCategoryExpander);
-			Localizer.Update();
 
 			ShowAll();
+		}
+
+		private CssProvider CreateCssProviderFromData(String Css) {
+			var CSSProvider = new CssProvider();
+			CSSProvider.LoadFromData(Css);
+			return CSSProvider;
 		}
 
 		private void SpriteItemCliced(string ItemName) {
@@ -111,12 +135,11 @@ namespace UndertaleModToolGtk
 		}
 
 		private void btn_clicked(object sender, EventArgs e) {
-			if (Localizer.Language == "English") {
-				Localizer.Language = "TestLang";
+			if (Localizer.GetLanguage() == "English") {
+				Localizer.SetLanguage("TestLang");
 			} else {
-				Localizer.Language = "English";
+				Localizer.SetLanguage("English");
 			}
-			Localizer.Update();
 		}
 
 
