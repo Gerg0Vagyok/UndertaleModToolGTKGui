@@ -9,8 +9,8 @@ namespace UndertaleModToolGtk
 {
 	class Program : Window
 	{
-		private class CategoriesManager {
-			public class Category {
+		private class CategoriesManager { // The CategoriesManager class. This manages and does stuff for the categories. Makes it easier to use.
+			public class Category { // The Category class. This stores the individual categories.
 				private Expander CategoryExpander;
 
 				private String CategoryName;
@@ -20,38 +20,37 @@ namespace UndertaleModToolGtk
 				private Action<String, String, Boolean> Select;
 				private Action<Category> UnselectOthers;
 
-				public String GetName() {
+				public String GetName() { // Get the name of the category. Unlocalized.
 					return CategoryName;
 				}
 
-				public void UnselectAll() {
+				public void UnselectAll() { // Unselect all rows, used outside and inside as well.
 					CategoryListbox.UnselectAll();
 				}
 
-				public Label GetLabel(String Name) {
+				public Label GetLabel(String Name) { // Get a label, used outside, i think.
 					return ListOfAllLabels[Name];
 				}
 
-				public void SelectLabel(String Name) {
+				public void SelectLabel(String Name) { // Unselect everything besides 1 label.
 					UnselectOthers(this);
 					UnselectAll();
 					CategoryListbox.SelectRow(ListOfAllLabels[Name].Parent as ListBoxRow);
 				}
 
-				public void Search(String SearchString) {
-					Dictionary<String, Label>.KeyCollection Keys = ListOfAllLabels.Keys;
-					foreach(String Key in Keys) {
-						if (!Key.Contains(SearchString)) {
+				public void Search(String SearchString) {  // Search function.
+					foreach(String Key in ListOfAllLabels.Keys) {
+						if (!Key.Contains(SearchString)) { // Hide all elements that dont contain the SearchString
 							ListOfAllLabels[Key].Parent.NoShowAll = true;
 							ListOfAllLabels[Key].Parent.Visible = false;
-						} else {
+						} else { 						   // Show everything else
 							ListOfAllLabels[Key].Parent.NoShowAll = false;
 							ListOfAllLabels[Key].Parent.Visible = true;
 						}
 					}
 				}
 
-				public void LoadString(String Name) {
+				public void LoadString(String Name) { // Load data from a singular string.
 					Label NewLabel = new Label(Name);
 					NewLabel.UseUnderline = false;
 					NewLabel.Halign = Align.Start;
@@ -61,13 +60,13 @@ namespace UndertaleModToolGtk
 					
 				}
 
-				public void LoadArray(String[] Names) {
+				public void LoadArray(String[] Names) { // Load data from an array of strings. uses LoadString under the hood.
 					foreach(String Name in Names) {
 						LoadString(Name);
 					}
 				}
 
-				public Expander GetExpander() {
+				public Expander GetExpander() { // For localization and stuff.
 					return CategoryExpander;
 				}
 
@@ -105,39 +104,33 @@ namespace UndertaleModToolGtk
 			private (Category category, String name) CurrentlySelected;
 			private Dictionary<String, Category> Categories = new Dictionary<String, Category>();
 
-			private (Category Category, String name) GetCurrentlySelected() {
-				return CurrentlySelected;
-			}
-
-			public Category GetCategory(String Name) {
+			public Category GetCategory(String Name) { // Get a category by name.
 				return Categories[Name];
 			}
 
-			public Category New(String Name) {
+			public Category New(String Name) { // Add a new category.
 				Category NewCategory = new Category(Name, Select, UnselectOthers);
 				Categories[Name] = NewCategory;
 
 				return NewCategory;
 			}
 
-			public void Search(String SearchString) {
+			public void Search(String SearchString) { // Search, the one outside stuff uses.
 				foreach (Category Cat in Categories.Values) {
 					Cat.Search(SearchString);
 				}
 			}
 
-			public void Back() {
+			public void Back() { // Go back in the selection.
 				if (BackList.Count() > 0) {
-					Console.WriteLine(BackList.Last().name);
 					Select(BackList.Last().name, BackList.Last().category.GetName(), true);
 				}
 			}
 
-			private void Select(String SelectedName, String CategoryName, Boolean IsBack) {
+			private void Select(String SelectedName, String CategoryName, Boolean IsBack) { // This is the select function, idk what to tell u its complicated.
 				if (Categories.ContainsKey(CategoryName)) {
 					if (!IsBack && CurrentlySelected.name != null && ((BackList.Count() > 0 && CurrentlySelected != BackList.Last()) || BackList.Count() == 0)) {
 						BackList.Add(CurrentlySelected);
-						Console.WriteLine("WHATTT");
 						CurrentlySelected = (Categories[CategoryName], SelectedName);
 					} else if (!IsBack) {
 						CurrentlySelected = (Categories[CategoryName], SelectedName);
@@ -145,22 +138,14 @@ namespace UndertaleModToolGtk
 						BackList.Clear();
 						CurrentlySelected = (Categories[CategoryName], SelectedName);
 					} else if (IsBack) {
-						Console.WriteLine(BackList.Count());
 						BackList.RemoveAt(BackList.Count() - 1);
-						Console.WriteLine(BackList.Last().name + " - ");
 						CurrentlySelected = BackList.Last();
 					}
 					Categories[CategoryName].SelectLabel(SelectedName);
-					Console.WriteLine(SelectedName);
-					Console.WriteLine(CurrentlySelected);
-					foreach((Category category, String name) el in BackList) {
-						Console.Write("(" + el.name + ")");
-					}
-					Console.WriteLine("");
 				}
 			}
 
-			private void UnselectOthers(Category category) {
+			private void UnselectOthers(Category category) { // Unselect all categories besides 1.
 				foreach(Category cat in Categories.Values) {
 					if (cat != category) {
 						cat.UnselectAll();
@@ -244,13 +229,6 @@ namespace UndertaleModToolGtk
 
 			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
 			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
-
-			//SpritesCategoryContent.RowSelected += (o, args) => {
-			//	var row = args.Row;
-			//	Console.WriteLine($"Clicked on: {row}");
-			//	// Add logic to make that it check doubleclicks and is shared across multiple categories so use a outisde, and make it into a proper function
-			//};
-
 
 			Frame LeftFrame = new Frame(); 
 			Box LeftFrameBox = new Box(Orientation.Vertical, 0);
