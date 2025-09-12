@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Gtk;
 
 namespace UndertaleModToolGtk
@@ -14,9 +15,14 @@ namespace UndertaleModToolGtk
 
 				private String CategoryName;
 				private ListBox CategoryListbox = new ListBox();
+				private ListBoxRow SelectedRow = null;
 				private Dictionary<String, Label> ListOfAllLabels = new Dictionary<String, Label>();
-				private Action<String, String> Select;
+				private Action<String, String, Boolean> Select;
 				private Action<Category> UnselectOthers;
+
+				public String GetName() {
+					return CategoryName;
+				}
 
 				public void UnselectAll() {
 					CategoryListbox.UnselectAll();
@@ -29,7 +35,7 @@ namespace UndertaleModToolGtk
 				public void SelectLabel(String Name) {
 					UnselectOthers(this);
 					UnselectAll();
-					//CategoryListbox.SelectRow(ListOfAllLabels[Name].Parent as ListBoxRow);
+					CategoryListbox.SelectRow(ListOfAllLabels[Name].Parent as ListBoxRow);
 				}
 
 				public void Search(String SearchString) {
@@ -73,7 +79,7 @@ namespace UndertaleModToolGtk
 					ListOfAllLabels.Clear();
 				}
 
-				public Category(String Name, Action<String, String> SelectFunc, Action<Category> UnselectOthersFunc) {
+				public Category(String Name, Action<String, String, Boolean> SelectFunc, Action<Category> UnselectOthersFunc) {
 					UnselectOthers = UnselectOthersFunc;
 					Select = SelectFunc; // Set function pointer things.
 
@@ -86,16 +92,22 @@ namespace UndertaleModToolGtk
 					CategoryListbox.Hexpand = true;
 					CategoryListbox.Halign = Align.Fill;
 					CategoryListbox.RowSelected += (o, args) => { // Code to select items to show on the right panel.
-						if (args.Row != null) {
-							Select((args.Row.Children[0] as Label).Text, Name); // This somehow works. tho it breaks if its not a label.
-						}														// Not the only thing that would.
+						if (args.Row != null && (SelectedRow == null || SelectedRow != args.Row)) {
+							SelectedRow = args.Row;
+							Select((args.Row.Children[0] as Label).Text, Name, false); // This somehow works. tho it breaks if its not a label.
+						}															   // Not the only thing that would.
 					};
 					CategoryName = Name;
 				}
 			}
 
-			private String CurrentlySelected = null;
+			private List<(Category category, String name)> BackList = new List<(Category category, String name)>(); // I swear i can name variables properly
+			private (Category category, String name) CurrentlySelected;
 			private Dictionary<String, Category> Categories = new Dictionary<String, Category>();
+
+			private (Category Category, String name) GetCurrentlySelected() {
+				return CurrentlySelected;
+			}
 
 			public Category GetCategory(String Name) {
 				return Categories[Name];
@@ -114,12 +126,38 @@ namespace UndertaleModToolGtk
 				}
 			}
 
-			private void Select(String SelectedName, String CategoryName) {
-				CurrentlySelected = SelectedName;
-				if (Categories.ContainsKey(CategoryName)) {
-					Categories[CategoryName].SelectLabel(SelectedName);
+			public void Back() {
+				if (BackList.Count() > 0) {
+					Console.WriteLine(BackList.Last().name);
+					Select(BackList.Last().name, BackList.Last().category.GetName(), true);
 				}
-				Console.WriteLine(CurrentlySelected);
+			}
+
+			private void Select(String SelectedName, String CategoryName, Boolean IsBack) {
+				if (Categories.ContainsKey(CategoryName)) {
+					if (!IsBack && CurrentlySelected.name != null && ((BackList.Count() > 0 && CurrentlySelected != BackList.Last()) || BackList.Count() == 0)) {
+						BackList.Add(CurrentlySelected);
+						Console.WriteLine("WHATTT");
+						CurrentlySelected = (Categories[CategoryName], SelectedName);
+					} else if (!IsBack) {
+						CurrentlySelected = (Categories[CategoryName], SelectedName);
+					} else if (IsBack && BackList.Count() < 2) {
+						BackList.Clear();
+						CurrentlySelected = (Categories[CategoryName], SelectedName);
+					} else if (IsBack) {
+						Console.WriteLine(BackList.Count());
+						BackList.RemoveAt(BackList.Count() - 1);
+						Console.WriteLine(BackList.Last().name + " - ");
+						CurrentlySelected = BackList.Last();
+					}
+					Categories[CategoryName].SelectLabel(SelectedName);
+					Console.WriteLine(SelectedName);
+					Console.WriteLine(CurrentlySelected);
+					foreach((Category category, String name) el in BackList) {
+						Console.Write("(" + el.name + ")");
+					}
+					Console.WriteLine("");
+				}
 			}
 
 			private void UnselectOthers(Category category) {
@@ -187,16 +225,22 @@ namespace UndertaleModToolGtk
 			MainRight.SetSizeRequest(MinWidth / 2, Height);
 
 
-			Button TestBuddon;
-			TestBuddon = new Button("asd");
-
+			Button TestBuddon = new Button("LangTest");
 			TestBuddon.Clicked += btn_clicked;
 
-			Entry testentry = new Entry();
-			testentry.Changed += (s, e) => Categories.Search(testentry.Text);
+			Box BackSearchBox = new Box(Orientation.Horizontal, 0);
+
+			Entry SearchEntry = new Entry();
+			SearchEntry.Changed += (s, e) => Categories.Search(SearchEntry.Text);
+			Button BackButton = new Button("BTN_BACK");
+			BackButton.Clicked += (o, args) => {Categories.Back();};
+
+			BackSearchBox.PackStart(BackButton, false, false, 0);
+			BackSearchBox.PackStart(SearchEntry, true, true, 0);
+
+			MainLeft.PackStart(BackSearchBox, false, false, 0);
 
 			MainRight.Add(TestBuddon);
-			MainLeft.PackStart(testentry, false, false ,0);
 
 			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
 			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
@@ -233,6 +277,7 @@ namespace UndertaleModToolGtk
 
 			Localizer.Add(SpritesCategory.GetExpander());
 			Localizer.Add(SoundsCategory.GetExpander());
+			Localizer.Add(BackButton);
 
 			ShowAll();
 		}
