@@ -1,10 +1,136 @@
+// This whole thing is held together by ducktape
+
 using System;
+using System.Collections.Generic;
 using Gtk;
 
 namespace UndertaleModToolGtk
 {
 	class Program : Window
 	{
+		private class CategoriesManager {
+			public class Category {
+				private Expander CategoryExpander;
+
+				private String CategoryName;
+				private ListBox CategoryListbox = new ListBox();
+				private Dictionary<String, Label> ListOfAllLabels = new Dictionary<String, Label>();
+				private Action<String, String> Select;
+				private Action<Category> UnselectOthers;
+
+				public void UnselectAll() {
+					CategoryListbox.UnselectAll();
+				}
+
+				public Label GetLabel(String Name) {
+					return ListOfAllLabels[Name];
+				}
+
+				public void SelectLabel(String Name) {
+					UnselectOthers(this);
+					UnselectAll();
+					//CategoryListbox.SelectRow(ListOfAllLabels[Name].Parent as ListBoxRow);
+				}
+
+				public void Search(String SearchString) {
+					Dictionary<String, Label>.KeyCollection Keys = ListOfAllLabels.Keys;
+					foreach(String Key in Keys) {
+						if (!Key.Contains(SearchString)) {
+							ListOfAllLabels[Key].Parent.NoShowAll = true;
+							ListOfAllLabels[Key].Parent.Visible = false;
+						} else {
+							ListOfAllLabels[Key].Parent.NoShowAll = false;
+							ListOfAllLabels[Key].Parent.Visible = true;
+						}
+					}
+				}
+
+				public void LoadString(String Name) {
+					Label NewLabel = new Label(Name);
+					NewLabel.UseUnderline = false;
+					NewLabel.Halign = Align.Start;
+					CategoryListbox.Add(NewLabel);
+					ListOfAllLabels.Add(Name, NewLabel);
+					NewLabel.Parent.Hexpand = true;
+					
+				}
+
+				public void LoadArray(String[] Names) {
+					foreach(String Name in Names) {
+						LoadString(Name);
+					}
+				}
+
+				public Expander GetExpander() {
+					return CategoryExpander;
+				}
+
+				public void Clear() {
+					foreach(Widget LabelEl in CategoryListbox.Children) {
+						CategoryListbox.Remove(LabelEl);
+						LabelEl.Destroy();
+					}
+					ListOfAllLabels.Clear();
+				}
+
+				public Category(String Name, Action<String, String> SelectFunc, Action<Category> UnselectOthersFunc) {
+					UnselectOthers = UnselectOthersFunc;
+					Select = SelectFunc; // Set function pointer things.
+
+					CategoryExpander = new Expander(Name); // Initalize the expander and set some properties
+					CategoryExpander.Add(CategoryListbox);
+					CategoryExpander.Halign = Align.Fill;
+
+					CategoryListbox.MarginStart = 15; // Set some properties for the listbox
+					CategoryListbox.StyleContext.AddClass("listbox");
+					CategoryListbox.Hexpand = true;
+					CategoryListbox.Halign = Align.Fill;
+					CategoryListbox.RowSelected += (o, args) => { // Code to select items to show on the right panel.
+						if (args.Row != null) {
+							Select((args.Row.Children[0] as Label).Text, Name); // This somehow works. tho it breaks if its not a label.
+						}														// Not the only thing that would.
+					};
+					CategoryName = Name;
+				}
+			}
+
+			private String CurrentlySelected = null;
+			private Dictionary<String, Category> Categories = new Dictionary<String, Category>();
+
+			public Category GetCategory(String Name) {
+				return Categories[Name];
+			}
+
+			public Category New(String Name) {
+				Category NewCategory = new Category(Name, Select, UnselectOthers);
+				Categories[Name] = NewCategory;
+
+				return NewCategory;
+			}
+
+			public void Search(String SearchString) {
+				foreach (Category Cat in Categories.Values) {
+					Cat.Search(SearchString);
+				}
+			}
+
+			private void Select(String SelectedName, String CategoryName) {
+				CurrentlySelected = SelectedName;
+				if (Categories.ContainsKey(CategoryName)) {
+					Categories[CategoryName].SelectLabel(SelectedName);
+				}
+				Console.WriteLine(CurrentlySelected);
+			}
+
+			private void UnselectOthers(Category category) {
+				foreach(Category cat in Categories.Values) {
+					if (cat != category) {
+						cat.UnselectAll();
+					}
+				}
+			}
+		}
+
 		private int Width = 1200;
 		private int MinWidth = 300;
 		private int Height = 650;
@@ -15,20 +141,23 @@ namespace UndertaleModToolGtk
 		private Box MainRight = new Box(Orientation.Vertical, 0);
 		private Box MainBox = new Box(Orientation.Vertical, 0);
 
-		private Localization Localizer;
+		private Localization Localizer = new Localization();
 
-		private Expander SpriteCategory = new Expander("Sprites");
-
-		public string Language = "Default";
+		private CategoriesManager Categories = new CategoriesManager();
+		private CategoriesManager.Category SoundsCategory;
+		private CategoriesManager.Category SpritesCategory;
 
 		private CssProvider CSS = new CssProvider();
 
 		private MenuBar TitleBar = new MenuBar();
 
 		private Program() : base("Unofficial UndertaleModTool") {
-			Localizer = new Localization();
+			SoundsCategory = Categories.New("CAT_SOUNDS");
+			SpritesCategory = Categories.New("CAT_SPRITES");
+			
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
+
 			CSS.LoadFromData(String.Join(
 				Environment.NewLine,
 				"* {",
@@ -57,44 +186,32 @@ namespace UndertaleModToolGtk
 			MainLeft.SetSizeRequest(MinWidth / 2, Height);
 			MainRight.SetSizeRequest(MinWidth / 2, Height);
 
-			Label label = new Label("Hello, World!");
 
 			Button TestBuddon;
 			TestBuddon = new Button("asd");
 
 			TestBuddon.Clicked += btn_clicked;
+
+			Entry testentry = new Entry();
+			testentry.Changed += (s, e) => Categories.Search(testentry.Text);
+
 			MainRight.Add(TestBuddon);
+			MainLeft.PackStart(testentry, false, false ,0);
 
-			Expander SpritesCategoryExpander = new Expander("CAT_SPRITES");
-			SpritesCategoryExpander.Halign = Align.Start;
-			ListBox SpritesCategoryContent = new ListBox();
-			SpritesCategoryContent.MarginStart = 15;
-			SpritesCategoryContent.StyleContext.AddClass("listbox");
-			SpritesCategoryContent.Add(new Label("asdasd"));
-			SpritesCategoryContent.Add(new Label("asdasd"));
-			SpritesCategoryContent.Add(new Label("asdasd"));
-			SpritesCategoryExpander.Add(SpritesCategoryContent);
+			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
+			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
 
-			SpritesCategoryContent.RowSelected += (o, args) => {
-				var row = args.Row;
-				Console.WriteLine($"Clicked on: {row}");
-				// Add logic to make that it check doubleclicks and is shared across multiple categories so use a outisde, and make it into a proper function
-			};
+			//SpritesCategoryContent.RowSelected += (o, args) => {
+			//	var row = args.Row;
+			//	Console.WriteLine($"Clicked on: {row}");
+			//	// Add logic to make that it check doubleclicks and is shared across multiple categories so use a outisde, and make it into a proper function
+			//};
 
-			Expander SoundsCategoryExpander = new Expander("CAT_SOUNDS");
-			SoundsCategoryExpander.Halign = Align.Start;
-			ListBox SoundsCategoryContent = new ListBox();
-			SoundsCategoryContent.MarginStart = 15;
-			SoundsCategoryContent.StyleContext.AddClass("listbox");
-			SoundsCategoryContent.Add(new Label("asdasd"));
-			SoundsCategoryContent.Add(new Label("asdasd"));
-			SoundsCategoryContent.Add(new Label("asdasd"));
-			SoundsCategoryExpander.Add(SoundsCategoryContent);
 
 			Frame LeftFrame = new Frame(); 
 			Box LeftFrameBox = new Box(Orientation.Vertical, 0);
-			LeftFrameBox.PackStart(SoundsCategoryExpander, false, false, 0);
-			LeftFrameBox.PackStart(SpritesCategoryExpander, false, false, 0);
+			LeftFrameBox.PackStart(SoundsCategory.GetExpander(), false, false, 0);
+			LeftFrameBox.PackStart(SpritesCategory.GetExpander(), false, false, 0);
 			LeftFrameBox.Margin = 5;
 			LeftFrame.Add(LeftFrameBox);
 
@@ -114,8 +231,8 @@ namespace UndertaleModToolGtk
 
 			Add(MainBox);
 
-			Localizer.Add(SpritesCategoryExpander);
-			Localizer.Add(SoundsCategoryExpander);
+			Localizer.Add(SpritesCategory.GetExpander());
+			Localizer.Add(SoundsCategory.GetExpander());
 
 			ShowAll();
 		}
