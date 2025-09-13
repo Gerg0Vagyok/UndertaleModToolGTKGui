@@ -69,6 +69,7 @@ The following projects can be compiled:
 - `UndertaleModLib`: The core library used by all other projects.
 - `UndertaleModCli`: A command line interface for interacting with GameMaker data files and applying scripts. Currently is very primitive in what it can do.
 - `UndertaleModTool`: The main graphical user interface for interacting with GameMaker data files. **Windows is required in order to compile this**.
+- `UndertaleModToolGtk`: The cross-platform graphical user interface for interacting with GameMaker data files.
 
 #### Compiling Via IDE
 - Open the `UndertaleModTool.sln` in the IDE of your choice (Visual Studio, JetBrains Rider, Visual Studio Code etc.)

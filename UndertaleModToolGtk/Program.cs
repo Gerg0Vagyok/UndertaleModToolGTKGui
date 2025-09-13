@@ -227,8 +227,8 @@ namespace UndertaleModToolGtk
 
 			MainRight.Add(TestBuddon);
 
-			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
-			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]);
+			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]); // Load test data.
+			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]); // Load test data.
 
 			Frame LeftFrame = new Frame(); 
 			Box LeftFrameBox = new Box(Orientation.Vertical, 0);
@@ -253,9 +253,11 @@ namespace UndertaleModToolGtk
 
 			Add(MainBox);
 
+			// Localization START
 			Localizer.Add(SpritesCategory.GetExpander());
 			Localizer.Add(SoundsCategory.GetExpander());
 			Localizer.Add(BackButton);
+			// Localization END
 
 			ShowAll();
 		}
