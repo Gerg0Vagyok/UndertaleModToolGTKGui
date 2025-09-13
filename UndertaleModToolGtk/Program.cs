@@ -17,7 +17,7 @@ namespace UndertaleModToolGtk
 				private ListBox CategoryListbox = new ListBox();
 				private ListBoxRow SelectedRow = null;
 				private Dictionary<String, Label> ListOfAllLabels = new Dictionary<String, Label>();
-				private Action<String, String, Boolean> Select;
+				private Action<String, String, Boolean, Boolean> Select;
 				private Action<Category> UnselectOthers;
 
 				public String GetName() { // Get the name of the category. Unlocalized.
@@ -57,7 +57,7 @@ namespace UndertaleModToolGtk
 					CategoryListbox.Add(NewLabel);
 					ListOfAllLabels.Add(Name, NewLabel);
 					NewLabel.Parent.Hexpand = true;
-					
+					NewLabel.Parent.MarginStart = 15;
 				}
 
 				public void LoadArray(String[] Names) { // Load data from an array of strings. uses LoadString under the hood.
@@ -70,7 +70,7 @@ namespace UndertaleModToolGtk
 					return CategoryExpander;
 				}
 
-				public void Clear() {
+				public void Clear() { // Clear all stuff from the expanders. Will be used for loading a new file for example.
 					foreach(Widget LabelEl in CategoryListbox.Children) {
 						CategoryListbox.Remove(LabelEl);
 						LabelEl.Destroy();
@@ -78,7 +78,7 @@ namespace UndertaleModToolGtk
 					ListOfAllLabels.Clear();
 				}
 
-				public Category(String Name, Action<String, String, Boolean> SelectFunc, Action<Category> UnselectOthersFunc) {
+				public Category(String Name, Action<String, String, Boolean, Boolean> SelectFunc, Action<Category> UnselectOthersFunc) {
 					UnselectOthers = UnselectOthersFunc;
 					Select = SelectFunc; // Set function pointer things.
 
@@ -86,20 +86,21 @@ namespace UndertaleModToolGtk
 					CategoryExpander.Add(CategoryListbox);
 					CategoryExpander.Halign = Align.Fill;
 
-					CategoryListbox.MarginStart = 15; // Set some properties for the listbox
-					CategoryListbox.StyleContext.AddClass("listbox");
+					CategoryListbox.MarginStart = 15;
+					CategoryListbox.StyleContext.AddClass("listbox"); // Set some properties for the listbox
 					CategoryListbox.Hexpand = true;
 					CategoryListbox.Halign = Align.Fill;
 					CategoryListbox.RowSelected += (o, args) => { // Code to select items to show on the right panel.
 						if (args.Row != null && (SelectedRow == null || SelectedRow != args.Row)) {
 							SelectedRow = args.Row;
-							Select((args.Row.Children[0] as Label).Text, Name, false); // This somehow works. tho it breaks if its not a label.
+							Select((args.Row.Children[0] as Label).Text, Name, false, false); // This somehow works. tho it breaks if its not a label.
 						}															   // Not the only thing that would.
 					};
 					CategoryName = Name;
 				}
 			}
 
+			private int BackListIndex = 0;
 			private List<(Category category, String name)> BackList = new List<(Category category, String name)>(); // I swear i can name variables properly
 			private (Category category, String name) CurrentlySelected;
 			private Dictionary<String, Category> Categories = new Dictionary<String, Category>();
@@ -122,24 +123,44 @@ namespace UndertaleModToolGtk
 			}
 
 			public void Back() { // Go back in the selection.
-				if (BackList.Count() > 0) {
-					Select(BackList.Last().name, BackList.Last().category.GetName(), true);
+				if (BackList.Count() > 0 && BackListIndex-1 >= 0) {
+					Select(BackList.Last().name, BackList[BackListIndex-1].category.GetName(), true, false);
+					BackListIndex--;
 				}
 			}
 
-			private void Select(String SelectedName, String CategoryName, Boolean IsBack) { // This is the select function, idk what to tell u its complicated.
+			public void Forward() { // Go forward in the selection.
+				if (BackList.Count() > 0 && BackListIndex+1 < BackList.Count()) {
+					Console.WriteLine("asdasd");
+					Select(BackList.Last().name, BackList[BackListIndex+1].category.GetName(), true, false);
+					BackListIndex++;
+				}
+			}
+
+			private void Select(String SelectedName, String CategoryName, Boolean IsBack, Boolean IsForward) { // This is the select function, idk what to tell u its complicated.
 				if (Categories.ContainsKey(CategoryName)) {
-					if (!IsBack && CurrentlySelected.name != null && ((BackList.Count() > 0 && CurrentlySelected != BackList.Last()) || BackList.Count() == 0)) {
-						BackList.Add(CurrentlySelected);
-						CurrentlySelected = (Categories[CategoryName], SelectedName);
-					} else if (!IsBack) {
-						CurrentlySelected = (Categories[CategoryName], SelectedName);
-					} else if (IsBack && BackList.Count() < 2) {
-						BackList.Clear();
+					if (!IsBack && !IsForward) {
+						if (CurrentlySelected.name != null && ((BackList.Count() > 0 && CurrentlySelected != BackList.Last()) || BackList.Count() == 0)) {
+							BackList.Add(CurrentlySelected);
+							BackListIndex++;
+						}
 						CurrentlySelected = (Categories[CategoryName], SelectedName);
 					} else if (IsBack) {
-						BackList.RemoveAt(BackList.Count() - 1);
-						CurrentlySelected = BackList.Last();
+						if (BackList.Count() < 2) {
+							BackList.Clear();
+							CurrentlySelected = (Categories[CategoryName], SelectedName);
+						} else {
+							BackList.RemoveAt(BackList.Count() - 1);
+							CurrentlySelected = BackList.Last();
+						}
+					} else if (IsForward) {
+						if (BackList.Count() < 2) {
+							BackList.Clear();
+							CurrentlySelected = (Categories[CategoryName], SelectedName);
+						} else {
+							BackList.RemoveAt(BackList.Count() - 1);
+							CurrentlySelected = BackList.Last();
+						}
 					}
 					Categories[CategoryName].SelectLabel(SelectedName);
 				}
@@ -181,7 +202,7 @@ namespace UndertaleModToolGtk
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
 
-			CSS.LoadFromData(String.Join(
+			CSS.LoadFromData(String.Join( // My editor hates this.
 				Environment.NewLine,
 				"* {",
 				"	font-size: 10pt;", 
@@ -206,26 +227,37 @@ namespace UndertaleModToolGtk
 
 			MainBox.PackStart(TitleBar, false, false, 0);
 
-			MainLeft.SetSizeRequest(MinWidth / 2, Height);
-			MainRight.SetSizeRequest(MinWidth / 2, Height);
+			MainLeft.SetSizeRequest(MinWidth / 2, MinHeight);
+			MainRight.SetSizeRequest(MinWidth / 2, MinHeight);
 
+			ResizeChecked += (o, args) => {
+				Width = Window.Width;
+				Height = Window.Height;
+			};
 
-			Button TestBuddon = new Button("LangTest");
-			TestBuddon.Clicked += btn_clicked;
+			Button LanguageTest = new Button("LangTest"); // Simple language test button.
+			LanguageTest.Clicked += btn_clicked;
 
-			Box BackSearchBox = new Box(Orientation.Horizontal, 0);
+			Box BackSearchBox = new Box(Orientation.Vertical, 0);
 
 			Entry SearchEntry = new Entry();
 			SearchEntry.Changed += (s, e) => Categories.Search(SearchEntry.Text);
+			Box BackForwardButtonsBox = new Box(Orientation.Horizontal, 0);
+
 			Button BackButton = new Button("BTN_BACK");
 			BackButton.Clicked += (o, args) => {Categories.Back();};
+			Button ForwardButton = new Button("BTN_FORWARD");
+			ForwardButton.Clicked += (o, args) => {Categories.Forward();};
 
-			BackSearchBox.PackStart(BackButton, false, false, 0);
+			BackForwardButtonsBox.PackStart(BackButton, true, true, 0);
+			BackForwardButtonsBox.PackStart(ForwardButton, true, true, 0);
+
+			BackSearchBox.PackStart(BackForwardButtonsBox, false, false, 0);
 			BackSearchBox.PackStart(SearchEntry, true, true, 0);
 
 			MainLeft.PackStart(BackSearchBox, false, false, 0);
 
-			MainRight.Add(TestBuddon);
+			MainRight.Add(LanguageTest);
 
 			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]); // Load test data.
 			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]); // Load test data.
@@ -249,34 +281,35 @@ namespace UndertaleModToolGtk
 			MainLeft.Margin = 5;
 			MainRight.Margin = 5;
 
-			MainBox.PackEnd(Seperator, false, false, 0);
+			MainBox.PackEnd(Seperator, true, true, 0);
 
 			Add(MainBox);
 
-			// Localization START
+			// Localization adding widgets START
 			Localizer.Add(SpritesCategory.GetExpander());
 			Localizer.Add(SoundsCategory.GetExpander());
 			Localizer.Add(BackButton);
-			// Localization END
+			Localizer.Add(ForwardButton);
+			// Localization adding widgets END
 
 			ShowAll();
 		}
 
-		private CssProvider CreateCssProviderFromData(String Css) {
+		private CssProvider CreateCssProviderFromData(String Css) { // Load css from a string, and return the CSSProvider.
 			var CSSProvider = new CssProvider();
 			CSSProvider.LoadFromData(Css);
 			return CSSProvider;
 		}
 
-		private void SpriteItemCliced(string ItemName) {
+		private void SpriteItemCliced(string ItemName) { // Is this even used?
 			Console.WriteLine(ItemName);
 		}
 
-		private void Window_DeleteEvent(object sender, DeleteEventArgs a) {
+		private void Window_DeleteEvent(object sender, DeleteEventArgs a) { // The exit event.
 			Application.Quit();
 		}
 
-		private void btn_clicked(object sender, EventArgs e) {
+		private void btn_clicked(object sender, EventArgs e) { // Simple language test button click function.
 			if (Localizer.GetLanguage() == "English") {
 				Localizer.SetLanguage("TestLang");
 			} else {
@@ -285,7 +318,7 @@ namespace UndertaleModToolGtk
 		}
 
 
-		public static void Main(string[] args) {
+		public static void Main(string[] args) { // The main function.
 			Application.Init();
 			var Win = new Program();
 			Application.Run();
