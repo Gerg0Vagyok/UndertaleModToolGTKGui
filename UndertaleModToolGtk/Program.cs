@@ -12,7 +12,7 @@ namespace UndertaleModToolGtk
 		private class CategoriesManager { // The CategoriesManager class. This manages and does stuff for the categories. Makes it easier to use.
 			public class Category { // The Category class. This stores the individual categories.
 				private Expander CategoryExpander;
-
+				
 				private String CategoryName;
 				private ListBox CategoryListbox = new ListBox();
 				private ListBoxRow SelectedRow = null;
@@ -100,9 +100,10 @@ namespace UndertaleModToolGtk
 				}
 			}
 
-			private int BackListIndex = 0;
-			private List<(Category category, String name)> BackList = new List<(Category category, String name)>(); // I swear i can name variables properly
-			private (Category category, String name) CurrentlySelected;
+			private int BackForwardLastUsed = 0;
+			private int BackListIndex = -1;
+			private List<(String Name, String CategoryName)> BackList = new List<(String Name, String CategoryName)>(); // I swear i can name variables properly
+			//private (String CategoryName, String Name) CurrentlySelected;
 			private Dictionary<String, Category> Categories = new Dictionary<String, Category>();
 
 			public Category GetCategory(String Name) { // Get a category by name.
@@ -123,45 +124,38 @@ namespace UndertaleModToolGtk
 			}
 
 			public void Back() { // Go back in the selection.
-				if (BackList.Count() > 0 && BackListIndex-1 >= 0) {
-					Select(BackList.Last().name, BackList[BackListIndex-1].category.GetName(), true, false);
-					BackListIndex--;
+				if (BackListIndex > 0) {
+					Select(BackList[BackListIndex-1].Name, BackList[BackListIndex-1].CategoryName, true, false);
 				}
 			}
 
 			public void Forward() { // Go forward in the selection.
-				if (BackList.Count() > 0 && BackListIndex+1 < BackList.Count()) {
-					Console.WriteLine("asdasd");
-					Select(BackList.Last().name, BackList[BackListIndex+1].category.GetName(), true, false);
-					BackListIndex++;
+				if (BackListIndex+1 < BackList.Count()) {
+					Select(BackList[BackListIndex+1].Name, BackList[BackListIndex+1].CategoryName, false, true);
 				}
 			}
 
-			private void Select(String SelectedName, String CategoryName, Boolean IsBack, Boolean IsForward) { // This is the select function, idk what to tell u its complicated.
+			private void Select(String SelectedName, String CategoryName, Boolean IsBack, Boolean IsForward) { // Rewite the whole thing.
 				if (Categories.ContainsKey(CategoryName)) {
 					if (!IsBack && !IsForward) {
-						if (CurrentlySelected.name != null && ((BackList.Count() > 0 && CurrentlySelected != BackList.Last()) || BackList.Count() == 0)) {
-							BackList.Add(CurrentlySelected);
+						int BLL = BackList.Count();  // BackListLength, to make the if a little shorter, IT WORKS
+						if ((BLL != 0 && BackListIndex > -1 && BackList[BackListIndex] != (SelectedName, CategoryName) && BackListIndex < BLL) || BLL == 0 || BackListIndex < 0) {
+							if (BLL > 0 && BackListIndex < BLL) {
+								BackList.RemoveRange(BackListIndex+1, BLL - BackListIndex - 1);
+							}
+							BackList.Add((SelectedName, CategoryName));
 							BackListIndex++;
+						} else {
+							BackForwardLastUsed = 0;
+							return;
 						}
-						CurrentlySelected = (Categories[CategoryName], SelectedName);
 					} else if (IsBack) {
-						if (BackList.Count() < 2) {
-							BackList.Clear();
-							CurrentlySelected = (Categories[CategoryName], SelectedName);
-						} else {
-							BackList.RemoveAt(BackList.Count() - 1);
-							CurrentlySelected = BackList.Last();
-						}
+						BackListIndex--;
 					} else if (IsForward) {
-						if (BackList.Count() < 2) {
-							BackList.Clear();
-							CurrentlySelected = (Categories[CategoryName], SelectedName);
-						} else {
-							BackList.RemoveAt(BackList.Count() - 1);
-							CurrentlySelected = BackList.Last();
-						}
+						BackListIndex++;
 					}
+					//Console.WriteLine("BackList: [" + String.Join(", ", BackList) + "] - BackListIndex: " + BackListIndex + " - IsBack: " + IsBack + " - IsForward: " + IsForward);
+					// If needed in the future, its just commented out.
 					Categories[CategoryName].SelectLabel(SelectedName);
 				}
 			}
