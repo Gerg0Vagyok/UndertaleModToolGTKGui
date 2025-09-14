@@ -13,11 +13,11 @@ namespace UndertaleModToolGtk
 			public class Category { // The Category class. This stores the individual categories.
 				private Expander CategoryExpander;
 				
-				private String CategoryName;
+				private string CategoryName;
 				private ListBox CategoryListbox = new ListBox();
 				private ListBoxRow SelectedRow = null;
-				private Dictionary<String, Label> ListOfAllLabels = new Dictionary<String, Label>();
-				private Action<String, String, Boolean, Boolean> Select;
+				private Dictionary<string, Label> ListOfAllLabels = new Dictionary<string, Label>();
+				private Action<string, string, bool, bool> Select;
 				private Action<Category> UnselectOthers;
 
 				public String GetName() { // Get the name of the category. Unlocalized.
@@ -28,18 +28,18 @@ namespace UndertaleModToolGtk
 					CategoryListbox.UnselectAll();
 				}
 
-				public Label GetLabel(String Name) { // Get a label, used outside, i think.
+				public Label GetLabel(string Name) { // Get a label, used outside, i think.
 					return ListOfAllLabels[Name];
 				}
 
-				public void SelectLabel(String Name) { // Unselect everything besides 1 label.
+				public void SelectLabel(string Name) { // Unselect everything besides 1 label.
 					UnselectOthers(this);
 					UnselectAll();
 					CategoryListbox.SelectRow(ListOfAllLabels[Name].Parent as ListBoxRow);
 				}
 
-				public void Search(String SearchString) {  // Search function.
-					foreach(String Key in ListOfAllLabels.Keys) {
+				public void Search(string SearchString) {  // Search function.
+					foreach(string Key in ListOfAllLabels.Keys) {
 						if (!Key.Contains(SearchString)) { // Hide all elements that dont contain the SearchString
 							ListOfAllLabels[Key].Parent.NoShowAll = true;
 							ListOfAllLabels[Key].Parent.Visible = false;
@@ -50,7 +50,7 @@ namespace UndertaleModToolGtk
 					}
 				}
 
-				public void LoadString(String Name) { // Load data from a singular string.
+				public void LoadString(string Name) { // Load data from a singular string.
 					Label NewLabel = new Label(Name);
 					NewLabel.UseUnderline = false;
 					NewLabel.Halign = Align.Start;
@@ -60,8 +60,8 @@ namespace UndertaleModToolGtk
 					NewLabel.Parent.MarginStart = 15;
 				}
 
-				public void LoadArray(String[] Names) { // Load data from an array of strings. uses LoadString under the hood.
-					foreach(String Name in Names) {
+				public void LoadArray(string[] Names) { // Load data from an array of strings. uses LoadString under the hood.
+					foreach(string Name in Names) {
 						LoadString(Name);
 					}
 				}
@@ -78,12 +78,12 @@ namespace UndertaleModToolGtk
 					ListOfAllLabels.Clear();
 				}
 
-				public Category(String Name, Action<String, String, Boolean, Boolean> SelectFunc, Action<Category> UnselectOthersFunc) {
+				public Category(string Name, Action<string, string, bool, bool> SelectFunc, Action<Category> UnselectOthersFunc) {
 					UnselectOthers = UnselectOthersFunc;
 					Select = SelectFunc; // Set function pointer things.
 
 					CategoryExpander = new Expander(Name); // Initalize the expander and set some properties
-					CategoryExpander.Add(CategoryListbox);
+					CategoryExpander.Child = CategoryListbox;
 					CategoryExpander.Halign = Align.Fill;
 
 					CategoryListbox.MarginStart = 15;
@@ -100,24 +100,23 @@ namespace UndertaleModToolGtk
 				}
 			}
 
-			private int BackForwardLastUsed = 0;
 			private int BackListIndex = -1;
-			private List<(String Name, String CategoryName)> BackList = new List<(String Name, String CategoryName)>(); // I swear i can name variables properly
-			//private (String CategoryName, String Name) CurrentlySelected;
-			private Dictionary<String, Category> Categories = new Dictionary<String, Category>();
+			private List<(string Name, string CategoryName)> BackList = new List<(string Name, string CategoryName)>(); // I swear i can name variables properly
 
-			public Category GetCategory(String Name) { // Get a category by name.
+			private Dictionary<string, Category> Categories = new Dictionary<string, Category>();
+
+			public Category GetCategory(string Name) { // Get a category by name.
 				return Categories[Name];
 			}
 
-			public Category New(String Name) { // Add a new category.
+			public Category New(string Name) { // Add a new category.
 				Category NewCategory = new Category(Name, Select, UnselectOthers);
 				Categories[Name] = NewCategory;
 
 				return NewCategory;
 			}
 
-			public void Search(String SearchString) { // Search, the one outside stuff uses.
+			public void Search(string SearchString) { // Search, the one outside stuff uses.
 				foreach (Category Cat in Categories.Values) {
 					Cat.Search(SearchString);
 				}
@@ -135,7 +134,7 @@ namespace UndertaleModToolGtk
 				}
 			}
 
-			private void Select(String SelectedName, String CategoryName, Boolean IsBack, Boolean IsForward) { // Rewite the whole thing.
+			private void Select(string SelectedName, string CategoryName, bool IsBack, bool IsForward) { // Rewite the whole thing.
 				if (Categories.ContainsKey(CategoryName)) {
 					if (!IsBack && !IsForward) {
 						int BLL = BackList.Count();  // BackListLength, to make the if a little shorter, IT WORKS
@@ -146,7 +145,6 @@ namespace UndertaleModToolGtk
 							BackList.Add((SelectedName, CategoryName));
 							BackListIndex++;
 						} else {
-							BackForwardLastUsed = 0;
 							return;
 						}
 					} else if (IsBack) {
@@ -196,7 +194,7 @@ namespace UndertaleModToolGtk
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
 
-			CSS.LoadFromData(String.Join( // My editor hates this.
+			CSS.LoadFromData(String.Join( // My editor hated this.
 				Environment.NewLine,
 				"* {",
 				"	font-size: 10pt;", 
@@ -217,7 +215,25 @@ namespace UndertaleModToolGtk
 			MenuItem settings = new MenuItem("Settings");
 			fileMenu.Append(settings);
 
+			MenuItem LangTest = new MenuItem("LangTest");
+			LangTest.Activated += (o, args) => {
+				if (Localizer.GetLanguage() == "English") {
+					Localizer.SetLanguage("TestLang");
+				} else {
+					Localizer.SetLanguage("English");
+				}
+			};
+			fileMenu.Append(LangTest);
+			
+			Menu fileMenu2 = new Menu();
+			MenuItem file2 = new MenuItem("File2");
+			file2.Submenu = fileMenu2;
+			
+			MenuItem open2 = new MenuItem("Open2");
+			fileMenu2.Append(open2);
+
 			TitleBar.Append(file);
+			TitleBar.Append(file2);
 
 			MainBox.PackStart(TitleBar, false, false, 0);
 
@@ -228,9 +244,6 @@ namespace UndertaleModToolGtk
 				Width = Window.Width;
 				Height = Window.Height;
 			};
-
-			Button LanguageTest = new Button("LangTest"); // Simple language test button.
-			LanguageTest.Clicked += btn_clicked;
 
 			Box BackSearchBox = new Box(Orientation.Vertical, 0);
 
@@ -251,7 +264,23 @@ namespace UndertaleModToolGtk
 
 			MainLeft.PackStart(BackSearchBox, false, false, 0);
 
-			MainRight.Add(LanguageTest);
+			Box RightTabsBox = new Box(Orientation.Vertical, 0);
+			Stack RightTabsStack = new Stack();
+			RightTabsStack.TransitionType = StackTransitionType.None;
+
+			var label1 = new Label("Tab 1 content");
+			var label2 = new Label("Tab 2 content");
+
+			RightTabsStack.AddTitled(label1, "tab1", "Tab 1");
+			RightTabsStack.AddTitled(label2, "tab2", "Tab 2");
+
+			StackSwitcher RightTabsSwitcher = new StackSwitcher();
+			RightTabsSwitcher.Stack = RightTabsStack;
+
+			RightTabsBox.Add(RightTabsSwitcher);
+			RightTabsBox.Add(RightTabsStack);
+
+			MainRight.Add(RightTabsBox);
 
 			SpritesCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]); // Load test data.
 			SoundsCategory.LoadArray(["test1", "test2", "test3", "spr_3", "test12", "test22"]); // Load test data.
@@ -289,32 +318,13 @@ namespace UndertaleModToolGtk
 			ShowAll();
 		}
 
-		private CssProvider CreateCssProviderFromData(String Css) { // Load css from a string, and return the CSSProvider.
-			var CSSProvider = new CssProvider();
-			CSSProvider.LoadFromData(Css);
-			return CSSProvider;
-		}
-
-		private void SpriteItemCliced(string ItemName) { // Is this even used?
-			Console.WriteLine(ItemName);
-		}
-
 		private void Window_DeleteEvent(object sender, DeleteEventArgs a) { // The exit event.
 			Application.Quit();
 		}
 
-		private void btn_clicked(object sender, EventArgs e) { // Simple language test button click function.
-			if (Localizer.GetLanguage() == "English") {
-				Localizer.SetLanguage("TestLang");
-			} else {
-				Localizer.SetLanguage("English");
-			}
-		}
-
-
 		public static void Main(string[] args) { // The main function.
 			Application.Init();
-			var Win = new Program();
+			Program Win = new Program();
 			Application.Run();
 		}
 	}

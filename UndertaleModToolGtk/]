@@ -6,21 +6,21 @@ using Gtk;
 
 namespace UndertaleModToolGtk {
 	class Localization {
-		private string Language;
-		private List<(Widget widget, string text)> LocalizedWidgets = new List<(Widget widget, string text)>();
-		private Dictionary<string, Dictionary<string, string>> LocalizationData = new Dictionary<string, Dictionary<string, string>>();
-		private Dictionary<string, string> Overwrites = new Dictionary<string, string>();
+		private String Language;
+		private List<(Widget widget, String text)> LocalizedWidgets = new List<(Widget widget, String text)>();
+		private Dictionary<String, Dictionary<String, String>> LocalizationData = Dictionary<String, Dictionary<String, String>>;
+		private Dictionary<String, String> Overwrites = new Dictionary<String, String>();
 
-		public Localization(string Lang = "English", string LocalizationFileName = "lang.json") {
+		public Localization(String Lang = "English", String LocalizationFileName = "lang.json") {
 			Language = Lang;
 			LocalizationData = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(File.ReadAllText(LocalizationFileName));
 		}
 
-		public string GetLanguage() {
+		public String GetLanguage() {
 			return Language;
 		}
 
-		public void SetLanguage(string Lang) {
+		public void SetLanguage(String Lang) {
 			Language = Lang;
 			Update();
 		}
@@ -40,26 +40,14 @@ namespace UndertaleModToolGtk {
 			Update();
 		}
 
-		public void ClearOverwrites() {
-			Overwrites.Clear();
-		}
-
-		public void AddOverwrite(string LocalizationID, string Text) {
-			Overwrites[LocalizationID] = Text;
-		}
-
-		public void DeleteOverwrite(string LocalizationID) {
-			Overwrites.Remove(LocalizationID);
-		}
-
-		public string GetOverwrite(string LocalizationID) {
-			return Overwrites[LocalizationID];
+		public void AddOverwrite() {
+			
 		}
 
 		public void Update() {
 			if (LocalizationData.ContainsKey(Language)) {
 			var LangData = LocalizationData[Language];
-				foreach ((Widget widget, string text) WidgetEl in LocalizedWidgets) {
+				foreach ((Widget widget, String text) WidgetEl in LocalizedWidgets) {
 					if (LangData.ContainsKey(WidgetEl.text)) {
 						if (WidgetEl.widget.GetType().GetProperty("Text") != null) {
 							var prop = WidgetEl.widget.GetType().GetProperty("text");
