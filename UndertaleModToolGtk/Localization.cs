@@ -36,6 +36,11 @@ namespace UndertaleModToolGtk {
 				if (prop != null && prop.CanRead) {
 					LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
 				}
+			} else if (widget.GetType().GetProperty("Name") != null) {
+				var prop = widget.GetType().GetProperty("Name");
+				if (prop != null && prop.CanRead) {
+					LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
+				}
 			}
 			Update();
 		}
@@ -68,6 +73,11 @@ namespace UndertaleModToolGtk {
 							}
 						} else if (WidgetEl.widget.GetType().GetProperty("Label") != null) {
 							var prop = WidgetEl.widget.GetType().GetProperty("Label");
+							if (prop != null && prop.CanWrite) {
+								prop.SetValue(WidgetEl.widget, LangData[WidgetEl.text]);
+							}
+						} else if (WidgetEl.widget.GetType().GetProperty("Name") != null) {
+							var prop = WidgetEl.widget.GetType().GetProperty("Name");
 							if (prop != null && prop.CanWrite) {
 								prop.SetValue(WidgetEl.widget, LangData[WidgetEl.text]);
 							}

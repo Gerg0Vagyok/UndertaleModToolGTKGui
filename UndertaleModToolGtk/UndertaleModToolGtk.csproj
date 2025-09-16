@@ -3,6 +3,9 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
+    <NoWarn>$(NoWarn);IDE0090</NoWarn>
+    <NoWarn>$(NoWarn);IDE0017</NoWarn>
+    <NoWarn>$(NoWarn);IDE0028</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

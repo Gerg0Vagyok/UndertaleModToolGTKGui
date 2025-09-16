@@ -5,22 +5,24 @@ using System.Collections.Generic;
 using System.Linq;
 using Gtk;
 
-namespace UndertaleModToolGtk
-{
-	class Program : Window
-	{
+namespace UndertaleModToolGtk {
+	class Program : Window {
+		public enum ItemType { // I hope i dont have to explain these.
+			MenuItem,
+			Separator
+		}
+		
 		private class CategoriesManager { // The CategoriesManager class. This manages and does stuff for the categories. Makes it easier to use.
 			public class Category { // The Category class. This stores the individual categories.
-				private Expander CategoryExpander;
-				
-				private string CategoryName;
-				private ListBox CategoryListbox = new ListBox();
+				private readonly Expander CategoryExpander;
+				private readonly string CategoryName;
+				private readonly ListBox CategoryListbox = new ListBox();
+				private readonly Dictionary<string, Label> ListOfAllLabels = new Dictionary<string, Label>();
+				private readonly Action<string, string, bool, bool> Select;
+				private readonly Action<Category> UnselectOthers;
 				private ListBoxRow SelectedRow = null;
-				private Dictionary<string, Label> ListOfAllLabels = new Dictionary<string, Label>();
-				private Action<string, string, bool, bool> Select;
-				private Action<Category> UnselectOthers;
 
-				public String GetName() { // Get the name of the category. Unlocalized.
+				public string GetName() { // Get the name of the category. Unlocalized.
 					return CategoryName;
 				}
 
@@ -101,9 +103,8 @@ namespace UndertaleModToolGtk
 			}
 
 			private int BackListIndex = -1;
-			private List<(string Name, string CategoryName)> BackList = new List<(string Name, string CategoryName)>(); // I swear i can name variables properly
-
-			private Dictionary<string, Category> Categories = new Dictionary<string, Category>();
+			private readonly List<(string Name, string CategoryName)> BackList = new List<(string Name, string CategoryName)>(); // I swear i can name variables properly
+			private readonly Dictionary<string, Category> Categories = new Dictionary<string, Category>();
 
 			public Category GetCategory(string Name) { // Get a category by name.
 				return Categories[Name];
@@ -158,7 +159,7 @@ namespace UndertaleModToolGtk
 				}
 			}
 
-			private void UnselectOthers(Category category) { // Unselect all categories besides 1.
+			private void UnselectOthers(Category category) { // Unselect all categories besides one.
 				foreach(Category cat in Categories.Values) {
 					if (cat != category) {
 						cat.UnselectAll();
@@ -167,34 +168,113 @@ namespace UndertaleModToolGtk
 			}
 		}
 
+		private class TitleBarManager {
+			public class TitleBarItem {
+				private readonly List<MenuItem> Items = new List<MenuItem>();
+				private readonly Menu MenuMain = new Menu();
+				private readonly MenuItem MenuSub;
+
+				private bool ItemsContains(string Name) {
+					foreach(MenuItem Item in Items) {
+						if (Item.Name == Name) {
+							return true;
+						}
+					}
+					return false;
+				}
+
+				public MenuItem Add(ItemType Type, string Name = "", Action<object, EventArgs> Func = null) {
+					switch(Type) {
+						case ItemType.MenuItem:
+							if (Func != null && Name != "" && !ItemsContains(Name)) {
+								MenuItem NewItem = new MenuItem($"{Name}");
+								NewItem.Activated += new EventHandler(Func);
+								Items.Add(NewItem);
+								MenuMain.Append(NewItem);
+								return NewItem;
+							}
+							break;
+						case ItemType.Separator:
+							SeparatorMenuItem NewSeparator = new SeparatorMenuItem();
+							Items.Add(NewSeparator);
+							return NewSeparator;
+					}
+					return null;
+				}
+
+				public List<MenuItem> GetItems() {
+					return Items;
+				}
+
+				public MenuItem GetMenu() {
+					return MenuSub;
+				}
+
+				public TitleBarItem(string Name) {
+					MenuSub = new MenuItem(Name);
+					MenuSub.Submenu = MenuMain;
+				}
+			}
+
+			private readonly Dictionary<string, TitleBarItem> Menus = new Dictionary<string, TitleBarItem>();
+			private readonly MenuBar TitleBar = new MenuBar();
+
+			public MenuItem AddMenuSeparator(string MenuName) {
+				return Menus[MenuName].Add(ItemType.Separator);
+			}
+
+			public MenuItem AddMenuItem(string MenuName, string ItemName, Action<object, EventArgs> Func) {
+				return Menus[MenuName].Add(ItemType.MenuItem, ItemName, Func);
+			}
+
+			public TitleBarItem AddMenu(string Name) {
+				TitleBarItem NewTitleBarItem = new TitleBarItem(Name);
+				TitleBar.Append(NewTitleBarItem.GetMenu());
+				Menus[Name] = NewTitleBarItem;
+				return NewTitleBarItem;
+			}
+
+			public MenuBar GetMenuBar() {
+				return TitleBar;
+			}
+		}
+
 		private int Width = 1200;
-		private int MinWidth = 300;
+		private const int MinWidth = 300;
 		private int Height = 650;
-		private int MinHeight = 100;
+		private const int MinHeight = 100;
 
-		private Paned Seperator = new Paned(Orientation.Horizontal);
-		private Box MainLeft = new Box(Orientation.Vertical, 0);
-		private Box MainRight = new Box(Orientation.Vertical, 0);
-		private Box MainBox = new Box(Orientation.Vertical, 0);
+		private readonly Paned Separator = new Paned(Orientation.Horizontal);
+		private readonly Box MainLeft = new Box(Orientation.Vertical, 0);
+		private readonly Box MainRight = new Box(Orientation.Vertical, 0);
+		private readonly Box MainBox = new Box(Orientation.Vertical, 0);
 
-		private Localization Localizer = new Localization();
+		private readonly Localization Localizer = new Localization();
 
-		private CategoriesManager Categories = new CategoriesManager();
-		private CategoriesManager.Category SoundsCategory;
-		private CategoriesManager.Category SpritesCategory;
+		private readonly CategoriesManager Categories = new CategoriesManager();
+		private readonly CategoriesManager.Category SoundsCategory;
+		private readonly CategoriesManager.Category SpritesCategory;
 
-		private CssProvider CSS = new CssProvider();
+		private readonly CssProvider CSS = new CssProvider();
 
-		private MenuBar TitleBar = new MenuBar();
+		private readonly TitleBarManager MenuBarManager = new TitleBarManager();
+		private readonly TitleBarManager.TitleBarItem MenuBarFile;
+		private readonly TitleBarManager.TitleBarItem MenuBarScripts;
+		private readonly TitleBarManager.TitleBarItem MenuBarHelp;
+		private readonly MenuBar TitleBar;
 
 		private Program() : base("Unofficial UndertaleModTool") {
 			SoundsCategory = Categories.New("CAT_SOUNDS");
 			SpritesCategory = Categories.New("CAT_SPRITES");
-			
+			TitleBar = MenuBarManager.GetMenuBar();
+			MenuBarFile = MenuBarManager.AddMenu("TB_FILE");
+			MenuBarScripts = MenuBarManager.AddMenu("TB_SCRIPTS");
+			MenuBarHelp = MenuBarManager.AddMenu("TB_HELP");
+
 			SetDefaultSize(Width, Height);
 			SetSizeRequest(MinWidth, MinHeight);
 
-			CSS.LoadFromData(String.Join( // My editor hated this.
+			CSS.LoadFromData(string.Join( // My editor hated this.
 				Environment.NewLine,
 				"* {",
 				"	font-size: 10pt;", 
@@ -205,25 +285,13 @@ namespace UndertaleModToolGtk
 			));
 			StyleContext.AddProviderForScreen(Gdk.Screen.Default, CSS, 800);
 
-			Menu fileMenu = new Menu();
-			MenuItem file = new MenuItem("File");
-			file.Submenu = fileMenu;
-
-			MenuItem open = new MenuItem("Open");
-			fileMenu.Append(open);
-
-			MenuItem settings = new MenuItem("Settings");
-			fileMenu.Append(settings);
-
-			MenuItem LangTest = new MenuItem("LangTest");
-			LangTest.Activated += (o, args) => {
+			MenuBarManager.AddMenuItem("TB_FILE", "TB_FILE_LANGTEST", (o, args) => {
 				if (Localizer.GetLanguage() == "English") {
 					Localizer.SetLanguage("TestLang");
 				} else {
 					Localizer.SetLanguage("English");
 				}
-			};
-			fileMenu.Append(LangTest);
+			});
 			
 			Menu fileMenu2 = new Menu();
 			MenuItem file2 = new MenuItem("File2");
@@ -232,10 +300,10 @@ namespace UndertaleModToolGtk
 			MenuItem open2 = new MenuItem("Open2");
 			fileMenu2.Append(open2);
 
-			TitleBar.Append(file);
-			TitleBar.Append(file2);
+			var test = new MenuBar();
+			test.Append(file2);
 
-			MainBox.PackStart(TitleBar, false, false, 0);
+			MainBox.PackStart(MenuBarManager.GetMenuBar(), false, false, 0);
 
 			MainLeft.SetSizeRequest(MinWidth / 2, MinHeight);
 			MainRight.SetSizeRequest(MinWidth / 2, MinHeight);
@@ -294,17 +362,17 @@ namespace UndertaleModToolGtk
 
 			MainLeft.PackStart(LeftFrame, true, true, 0);
 
-			Seperator.Pack1(MainLeft, true, false);
-			Seperator.Pack2(MainRight, true, false);
+			Separator.Pack1(MainLeft, true, false);
+			Separator.Pack2(MainRight, true, false);
 
-			Seperator.Position = Width / 4;
+			Separator.Position = Width / 4;
 
 			DeleteEvent += Window_DeleteEvent;
 
 			MainLeft.Margin = 5;
 			MainRight.Margin = 5;
 
-			MainBox.PackEnd(Seperator, true, true, 0);
+			MainBox.PackEnd(Separator, true, true, 0);
 
 			Add(MainBox);
 
@@ -322,9 +390,15 @@ namespace UndertaleModToolGtk
 			Application.Quit();
 		}
 
-		public static void Main(string[] args) { // The main function.
+
+		/* UselessStuffToMakeTheLSPShutUp*/
+		private readonly char[] UATMTLSPSU = ['1','2'];
+		private void UFTMTLSPSU() {UATMTLSPSU[0] = UATMTLSPSU[1];}
+
+		public static void Main() { // The main function.
 			Application.Init();
 			Program Win = new Program();
+			Win.UFTMTLSPSU();
 			Application.Run();
 		}
 	}
