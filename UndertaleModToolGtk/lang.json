@@ -2,13 +2,25 @@
 	"English": {
 		"CAT_SPRITES": "Sprites",
 		"CAT_SOUNDS": "Sounds",
+
 		"BTN_BACK": "Back",
-		"BTN_FORWARD": "Forward"
+		"BTN_FORWARD": "Forward",
+
+		"TB_FILE": "File",
+		"TB_FILE_LANGTEST": "Langtest",
+		"TB_SCRIPTS": "Scripts",
+		"TB_HELP": "Help"
 	},
 	"TestLang": {
 		"CAT_SPRITES": "TestLang_Sprites",
 		"CAT_SOUNDS": "TestLang_Sounds",
+
 		"BTN_BACK": "TestLang_Back",
-		"BTN_FORWARD": "TestLang_Forward"
+		"BTN_FORWARD": "TestLang_Forward",
+
+		"TB_FILE": "TestLang_File",
+		"TB_FILE_LANGTEST": "TestLang_Langtest",
+		"TB_SCRIPTS": "TestLang_Scripts",
+		"TB_HELP": "TestLang_Help"
 	}
 }

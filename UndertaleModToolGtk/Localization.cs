@@ -6,10 +6,19 @@ using Gtk;
 
 namespace UndertaleModToolGtk {
 	class Localization {
+		private class WidgetTextClass {
+			public Widget widget;
+			public string text;
+			public WidgetTextClass(Widget widget, string text) {
+				this.widget = widget;
+				this.text = text;
+			}
+		}
+
 		private string Language;
-		private List<(Widget widget, string text)> LocalizedWidgets = new List<(Widget widget, string text)>();
-		private Dictionary<string, Dictionary<string, string>> LocalizationData = new Dictionary<string, Dictionary<string, string>>();
-		private Dictionary<string, string> Overwrites = new Dictionary<string, string>();
+		private readonly List<WidgetTextClass> LocalizedWidgets = new List<WidgetTextClass>();
+		private readonly Dictionary<string, Dictionary<string, string>> LocalizationData = new Dictionary<string, Dictionary<string, string>>();
+		private readonly Dictionary<string, string> Overwrites = new Dictionary<string, string>();
 
 		public Localization(string Lang = "English", string LocalizationFileName = "lang.json") {
 			Language = Lang;
@@ -25,24 +34,30 @@ namespace UndertaleModToolGtk {
 			Update();
 		}
 
-		public void Add(Widget widget) {
+		public void Add(Widget widget) { // Add a widget
 			if (widget.GetType().GetProperty("Text") != null) {
 				var prop = widget.GetType().GetProperty("Text");
 				if (prop != null && prop.CanRead) {
-					LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
+					LocalizedWidgets.Add(new WidgetTextClass(widget, prop.GetValue(widget).ToString()));
 				}
 			} else if (widget.GetType().GetProperty("Label") != null) {
 				var prop = widget.GetType().GetProperty("Label");
 				if (prop != null && prop.CanRead) {
-					LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
+					LocalizedWidgets.Add(new WidgetTextClass(widget, prop.GetValue(widget).ToString()));
 				}
 			} else if (widget.GetType().GetProperty("Name") != null) {
 				var prop = widget.GetType().GetProperty("Name");
 				if (prop != null && prop.CanRead) {
-					LocalizedWidgets.Add((widget, prop.GetValue(widget).ToString()));
+					LocalizedWidgets.Add(new WidgetTextClass(widget, prop.GetValue(widget).ToString()));
 				}
 			}
 			Update();
+		}
+
+		public void AddArr<T>(List<T> Widgets) where T : Widget{ // Add an array of widgets
+			foreach(Widget widget in Widgets) {
+				Add(widget);
+			}
 		}
 
 		public void ClearOverwrites() {
@@ -64,7 +79,7 @@ namespace UndertaleModToolGtk {
 		public void Update() {
 			if (LocalizationData.ContainsKey(Language)) {
 			var LangData = LocalizationData[Language];
-				foreach ((Widget widget, string text) WidgetEl in LocalizedWidgets) {
+				foreach (WidgetTextClass WidgetEl in LocalizedWidgets) {
 					if (LangData.ContainsKey(WidgetEl.text)) {
 						if (WidgetEl.widget.GetType().GetProperty("Text") != null) {
 							var prop = WidgetEl.widget.GetType().GetProperty("text");
